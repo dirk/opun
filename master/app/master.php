@@ -1,6 +1,84 @@
 <?php
 include('lib/opun.php');
 
+class Master {
+	var $slaves, $packages;
+	
+	var $datastore, $config;
+	function Master($datastore, $config) {
+		$this->datastore = $datastore; $this->config = $config;
+		
+		$this->packages = array(
+			array(
+				'file' => 'test.zip',
+				'checksum' => '',
+				'release' => time() - 300
+			)
+		);
+		
+		$this->slaves = array(
+			'localhost.opun.slave' => array(
+				'bandwidth' => array(
+					'used' => 0,
+					'maximum' => 1000000000,
+					'total' => 25000000000
+				),
+				'clients' => 0,
+				'last_status' => time() - 300,
+				'packages' => array(
+					'slave' => array(
+						array(
+							'file' => 'test.zip',
+							'checksum' => '',
+							'serving' => false,
+						)
+					),
+					'master' => array(
+						array(
+							'file' => 'test.zip',
+							'checksum' => ''
+						)
+					)
+				),
+			)
+		);
+	}
+	
+	function gateway(){
+		if($matches = $this->match('/^packages(?:.(?<format>[a-z]+))?/i')){
+			$this->packages(strtolower($matches['format']));
+		}
+		//$this->save();
+	}
+	function packages($format) {
+		$packages = array();
+		
+		foreach($this->packages as $package){
+			$packages[] = $package['file'] .':'. $package['checksum'];
+		}
+		
+		if($format == 'json'){
+			echo json_encode($packages);
+		}
+	}
+	
+	function match($expr, $qs = '') {
+		if($qs == ''){
+			$qs = $_SERVER['QUERY_STRING'];
+		}
+		if(starts_with($qs, '/')){
+			$qs = substr($qs, 1);
+		}
+		if(preg_match($expr, $qs, $matches)){
+			return $matches;
+		}else{
+			return false;
+		}
+	}
+}
+
+/*
+
 class Master extends Opun {
 	var $data, $slaves;
 	
@@ -53,13 +131,6 @@ class Master extends Opun {
 			$this->dashboard();
 		}else if($qs == 'status'){
 			foreach($this->slaves as $slave){
-				/*$response = $slave['oscen.instance']->request('slave.packages.list.update', 
-					array(
-						'master.packages.list' => array(
-							array('file' => 'test.zip', 'checksum' => ''),
-							array('file' => 'test2.zip', 'checksum' => '')
-						)
-					), $this->config['identifier']);*/
 				//$response = 
 				//print_r($response);
 			}
@@ -107,18 +178,6 @@ class Master extends Opun {
 			echo 403;
 		}
 	}
-	
-	
-	// Complete Implementations:
-	/*
-	slave.packages.check_servability:
-	$slave['oscen.instance']->request('slave.packages.check_servability', array('request.package' => 'test.zip'), $this->config['identifier']);
-	
-	
-	*/
-	
-	
-	
 	
 	function dashboard() {
 		$packages = $this->data->key('master.packages');
@@ -170,3 +229,4 @@ class Master extends Opun {
 		$this->data->key('master.slaves', $data);
 	}
 }
+*/

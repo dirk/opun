@@ -21,6 +21,7 @@ class Slave {
 						array(
 							'file' => 'test.zip',
 							'checksum' => '',
+							'serving' => false,
 							'bandwidth' => 0,
 							'clients' => 0
 						)
@@ -38,12 +39,53 @@ class Slave {
 	function gateway(){
 		if($matches = $this->match('/^status(?:.(?<format>[a-z]+))?/i')){
 			$this->status(strtolower($matches['format']));
+		}else if($this->match('/^packages\/update/')){
+			$this->update_packages();
 		}
 		$this->save();
 	}
 	function status($format){
-		if($format == 'json')
-			echo json_encode(array('test' => $format));
+		//if($master = $_POST['master'] && $master != '') {
+		if($master = 'localhost.opun.master'){
+			$master =& $this->masters[$master];
+			/*
+			bandwidth_maximum
+			bandwidth_used
+			bandwidth_total
+			packages
+			packages_serving
+			packages_master
+			last_update
+			clients*/
+			$clients = 0;
+			$packages = array();$packages_serving = array();
+			foreach($master['packages']['slave'] as $package){
+				$packages[] = $package['file'] .':'. $package['checksum'];
+				$clients += $package['clients'];
+				if($package['serving']){
+					$packages_serving[] = $package['file'] .':'. $package['checksum'];
+				}
+			}
+			$packages_master = array();
+			foreach($master['packages']['master'] as $package){
+				$packages_master[] = $package['file'] .':'. $package['checksum'];
+			}
+			sort($packages);sort($packages_serving);sort($packages_master);
+			$data = array(
+				'bandwidth_maximum' => $master['bandwidth']['maximum'],
+				'bandwidth_used'    => $master['bandwidth']['used'],
+				'bandwidth_total'   => $master['bandwidth']['total'],
+				'packages' => $packages,
+				'packages_serving' => $packages_serving,
+				'packages_master' => $packages_master,
+				'last_update' => time(),
+				'clients' => $clients
+			);
+		}
+		
+		if($format == 'json'){
+			echo json_encode($data);
+		}
 	}
 	
 	function save() {
