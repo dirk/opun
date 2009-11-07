@@ -7,6 +7,7 @@ class Slave {
 	
 	var $datastore, $config;
 	function Slave($datastore, $config) {
+		session_start();
 		$this->datastore = $datastore; $this->config = $config;
 		
 		$this->masters = array(
@@ -21,7 +22,7 @@ class Slave {
 						array(
 							'file' => 'test.zip',
 							'checksum' => '',
-							'serving' => false,
+							'serving' => true,
 							'bandwidth' => 0,
 							'clients' => 0
 						)
@@ -45,9 +46,15 @@ class Slave {
 		$this->save();
 	}
 	function status($format){
-		//if($master = $_POST['master'] && $master != '') {
-		if($master = 'localhost.opun.master'){
+		if($master = $_POST['master']) {
+			$signature = md5($master .':'. $this->config['secret']);
+			if($signature != $_POST['signature']){
+				echo 403;
+				return;
+			}
 			$master =& $this->masters[$master];
+		//if($master = 'localhost.opun.master'){
+		//	$master =& $this->masters[$master];
 			/*
 			bandwidth_maximum
 			bandwidth_used

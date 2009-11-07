@@ -6,61 +6,226 @@ class Master {
 	
 	var $datastore, $config;
 	function Master($datastore, $config) {
+		session_start();
 		$this->datastore = $datastore; $this->config = $config;
 		
-		$this->packages = array(
-			array(
-				'file' => 'test.zip',
-				'checksum' => '',
-				'release' => time() - 300
-			)
-		);
-		
-		$this->slaves = array(
-			'localhost.opun.slave' => array(
-				'bandwidth' => array(
-					'used' => 0,
-					'maximum' => 1000000000,
-					'total' => 25000000000
-				),
-				'clients' => 0,
-				'last_status' => time() - 300,
-				'packages' => array(
-					'slave' => array(
-						array(
-							'file' => 'test.zip',
-							'checksum' => '',
-							'serving' => false,
+		if(!$this->load()){
+			$this->packages = array(
+				array(
+					'file' => 'test.zip',
+					'checksum' => '',
+					'release' => time() - 300
+				)
+			);
+
+			$this->slaves = array(
+				'localhost.opun.slave' => array(
+					'gateway' => 'http://localhost/opun/slave/gateway.php?',
+					'identifier' => 'localhost.opun.slave',
+					'secret' => 'aabbccdd11223344',
+					'bandwidth' => array(
+						'used' => 0,
+						'maximum' => 1000000000,
+						'total' => 25000000000
+					),
+					'clients' => 0,
+					'last_status' => time() - 300,
+					'packages' => array(
+						'slave' => array(
+							array(
+								'file' => 'test.zip',
+								'checksum' => '',
+								'serving' => false,
+							)
+						),
+						'master' => array(
+							array(
+								'file' => 'test.zip',
+								'checksum' => ''
+							)
 						)
 					),
-					'master' => array(
-						array(
-							'file' => 'test.zip',
-							'checksum' => ''
-						)
-					)
-				),
-			)
-		);
+				)
+			);
+			$this->save();
+		}
+	}
+	function update_slave_status($slave_id) {
+		$slave =& $this->slaves[$slave_id];
+		
+		$status = $this->request($slave['gateway'] . '/status.json', array(
+			'master' => $this->config['identifier']), $slave['secret']);
+		if(!is_numeric($status)){
+			$data = json_decode($status, true);
+			$slave['bandwidth']['maximum'] = $data['bandwidth_maximum'];
+			$slave['bandwidth']['used'] = $data['bandwidth_used'];
+			$slave['bandwidth']['total'] = $data['bandwidth_total'];
+			$packages = array();
+			foreach($data['packages'] as $package){
+				$rev = strrev($package);
+				$parts = array_reverse(explode(':', $rev, 2));
+				$parts = array_map('strrev', $parts);
+				$append = array(
+					'file' => $parts[0],
+					'checksum' => $parts[1],
+					'serving' => (in_array($package, $data['packages_serving'])) ? true : false
+				);
+				$packages[] = $append;
+			}
+			$slave['packages']['slave'] = $packages;
+			$packages_master = array();
+			foreach($data['packages_master'] as $package){
+				$rev = strrev($package);
+				$parts = array_reverse(explode(':', $rev, 2));
+				$parts = array_map('strrev', $parts);
+				$append = array(
+					'file' => $parts[0],
+					'checksum' => $parts[1]
+				);
+				$packages_master[] = $append;
+			}
+			$slave['packages']['master'] = $packages_master;
+			$slave['clients'] = $data['clients'];
+			$slave['last_status'] = time();
+			$slave['last_update'] = $data['last_update'];
+		}
 	}
 	
+	function request($res, $data = array(), $signature = ''){
+		// Makes a request to a remote server. Include optional signing functionality.
+		$handle = curl_init();
+		if($signature != ''){
+			$data['signature'] = md5($this->config['identifier'] .':'. $signature);
+		}
+		
+		curl_setopt($handle, CURLOPT_URL, $res);
+		curl_setopt($handle, CURLOPT_POST, 1);
+		curl_setopt($handle, CURLOPT_POSTFIELDS, $data);
+		curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
+		
+		$result = curl_exec($handle);
+		curl_close($handle);
+		return $result;
+	}
+	
+	function route(){
+		$qs = $_SERVER['QUERY_STRING'];
+		// Routes the admin section
+		if($_SESSION['password'] != sha1($this->config['password'])){
+			$this->login();
+		}else{
+			if(starts_with($qs, '/logout')){
+				$this->logout();
+			}else if($qs == '/' or $qs == ''){
+				$this->dashboard();
+			}else{
+				echo 404;
+			}
+		}
+	}
+		function dashboard() {
+			$slaves = array();
+			/*
+			$this->slaves = array(
+				'localhost.opun.slave' => array(
+					'gateway' => 'http://localhost/opun/slave/gateway.php?',
+					'identifier' => 'localhost.opun.slave',
+					'secret' => 'aabbccdd11223344',
+					'bandwidth' => array(
+						'used' => 0,
+						'maximum' => 1000000000,
+						'total' => 25000000000
+					),
+					'clients' => 0,
+					'last_status' => time() - 300,
+					'packages' => array(
+						'slave' => array(
+							array(
+								'file' => 'test.zip',
+								'checksum' => '',
+								'serving' => false,
+							)
+						),
+						'master' => array(
+							array(
+								'file' => 'test.zip',
+								'checksum' => ''
+							)
+						)
+					),
+				)
+			);*/
+			$total_packages = count($this->packages);
+			foreach($this->slaves as $key => $slave){
+				$append = array(
+					'identifier' => $key
+				);
+				$slave_packages = 0;
+				foreach($slave['packages']['slave'] as $package){
+					foreach($this->packages as $master_package){
+						if($master_package['file'] == $package['file'] && $master_package['checksum'] == $package['checksum']){
+							$slave_packages++;
+						}
+					}
+				}
+				$append['packages'] = array(
+					'total'   => $total_packages,
+					'slave'   => $slave_packages,
+					'percent' => $slave_packages / $total_packages
+				);
+				$slaves[] = $append;
+			}
+			$data = array(
+				'slaves' => $slaves
+			);
+			$this->render('dashboard', $data);
+		}
+		function login() {
+			if($_POST['password']){
+				if($_POST['password'] == $this->config['password']){
+					$_SESSION['password'] = sha1($this->config['password']);
+					$this->redirect('');
+				}
+			}
+			$this->render('login');
+		}
+		function logout() {
+			unset($_SESSION['password']);
+			$this->redirect('login');
+		}
+	
+	// Templating methods
+	function link($resource){echo $this->config['base'] . '?/' . $resource;}
+	function url($resource){echo $this->config['base'] . $resource;}
+	function render($template, $vars = array()){
+		foreach($vars as $key => $value){
+			$$key = $value;
+		}
+		include('app/views/' . $template . '.php');
+	}
+	function redirect($resource) {
+		header('Location: ?/' . $resource);
+		die();
+	}
 	function gateway(){
+		// Routes the gateway.
 		if($matches = $this->match('/^packages(?:.(?<format>[a-z]+))?/i')){
 			$this->packages(strtolower($matches['format']));
-		}
-		//$this->save();
-	}
-	function packages($format) {
-		$packages = array();
-		
-		foreach($this->packages as $package){
-			$packages[] = $package['file'] .':'. $package['checksum'];
-		}
-		
-		if($format == 'json'){
-			echo json_encode($packages);
+		}else{
+			echo 404;
 		}
 	}
+		function packages($format) {
+			$packages = array();
+		
+			foreach($this->packages as $package){
+				$packages[] = $package['file'] .':'. $package['checksum'];
+			}
+		
+			if($format == 'json'){
+				echo json_encode($packages);
+			}
+		}
 	
 	function match($expr, $qs = '') {
 		if($qs == ''){
@@ -74,6 +239,22 @@ class Master {
 		}else{
 			return false;
 		}
+	}
+	function save() {
+		$data = array(
+			'slaves' => $this->slaves,
+			'packages' => $this->packages
+		);
+		
+		$this->datastore->data = $data;
+		$this->datastore->commit();
+	}
+	function load(){
+		if($this->datastore->data['slaves'] and $this->datastore->data['packages']){
+			$this->slaves   = $this->datastore->data['slaves'];
+			$this->packages = $this->datastore->data['packages'];
+			return true;
+		}else{return false;}
 	}
 }
 

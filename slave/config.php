@@ -4,9 +4,12 @@ $config = array();
 // Set up configuration data in here!
 // 
 // This is the password to access your Opun instance.
-$config['password']   = 'opun-master'; 
+$config['password']   = 'opun-slave'; 
 // Unique string to identify this Opun instance.
 $config['identifier'] = 'localhost.opun.slave';
+// This should be a long, random alphanumeric string used to protect from
+// request forgery between master and slave.
+$config['secret'] = 'aabbccdd11223344';
 // The URL for this Opun instance's gateway. Should be something like:
 // "http://master.example.com/gateway.php"
 $config['gateway'] = 'http://localhost/opun/slave/gateway.php';
