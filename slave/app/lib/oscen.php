@@ -1,13 +1,14 @@
 <?php
 
 function parse_post(){
-	$data = array();
+	/*$data = array();
 	foreach($_POST as $key => $value){
 		$keys = explode('_', $key, 3);
 		$key = implode('.', $keys);
 		$data[$key] = $value;
 	}
-	return $data;
+	return $data;*/
+	return json_decode(file_get_contents("php://input"), true);
 }
 
 function starts_with($string, $search) {
@@ -77,7 +78,7 @@ class Oscen {
 		}
 	}
 	function sign($type, $data) {
-		return md5($type . '&' . http_build_query($data) . '&' . $this->secret);
+		return md5($type . '&' . json_encode($data) . '&' . $this->secret);
 	}
 	function request($type, $data = array(), $identifier = '') {
 		$handle = curl_init();
@@ -92,7 +93,7 @@ class Oscen {
 		}
 		curl_setopt($handle, CURLOPT_URL, $base);
 		curl_setopt($handle, CURLOPT_POST, 1);
-		curl_setopt($handle, CURLOPT_POSTFIELDS, $data);
+		curl_setopt($handle, CURLOPT_POSTFIELDS, json_encode($data));
 		curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
 		
 		$result = curl_exec($handle);
@@ -103,13 +104,15 @@ class Oscen {
 		ksort($data);
 		$data['signature'] = $this->sign($type, $data);
 		
-		return http_build_query($data);
+		return json_encode($data);
 	}
 	function verify($type, $result) {
 		if(is_array($result)){
 			$data = $result;
+		}else if(!is_numeric($result) or $result != ''){
+			$data = (array) json_decode($result, true);
 		}else{
-			$data = $this->parse($result);
+			return $result;
 		}
 		$verify_data = array();
 		foreach($data as $key => $value) {
@@ -124,7 +127,7 @@ class Oscen {
 			return false;
 		}
 	}
-	function parse($request){
+	/*function parse($request){
 		$data = array();
 		$items = explode('&', $request);
 		foreach($items as $item){
@@ -132,5 +135,5 @@ class Oscen {
 			$data[$key] = $value;
 		}
 		return $data;
-	}
+	}*/
 }

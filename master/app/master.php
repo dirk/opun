@@ -9,6 +9,7 @@ class Master extends Opun {
 		
 		$this->boilerplate();
 		
+		$this->packages = $this->data->key('master.packages');
 		// Setting up Oscen instances for each slave.
 		for($i = 0; $i < count($this->slaves); $i++){
 			$this->slaves[$i]['oscen.instance'] = new Oscen(array(
@@ -27,11 +28,12 @@ class Master extends Opun {
 		));
 		
 		$this->slaves = $this->data->key('master.slaves');
-		if(count($this->slaves) == 0){
+		//if(count($this->slaves) == 0){
 			$this->slaves = array(
 				array(
 					'slave.gateway' => 'http://localhost/opun/slave/gateway.php',
 					'slave.secret' => 'aabbccdd',
+					'slave.identifier' => 'localhost.opun.slave',
 					'slave.packages' => array(
 						array(
 							'file'     => 'test.zip',
@@ -42,7 +44,7 @@ class Master extends Opun {
 				)
 			);
 			$this->data->key('master.slaves', $this->slaves);
-		}
+		//}
 	}
 	
 	function route() {
@@ -51,8 +53,58 @@ class Master extends Opun {
 			$this->dashboard();
 		}else if($qs == 'status'){
 			foreach($this->slaves as $slave){
-				
+				/*$response = $slave['oscen.instance']->request('slave.packages.list.update', 
+					array(
+						'master.packages.list' => array(
+							array('file' => 'test.zip', 'checksum' => ''),
+							array('file' => 'test2.zip', 'checksum' => '')
+						)
+					), $this->config['identifier']);*/
+				//$response = 
+				//print_r($response);
 			}
+		}
+	}
+	function gateway() {
+		$qs = $_SERVER['QUERY_STRING'];
+		$parts = explode('/', $qs);
+		$slave = null;
+		for($i = 0; $i < count($this->slaves); $i++) {
+			if($parts[0] = $this->slaves[$i]['slave.identifier']){
+				$slave =& $this->slaves[$i];
+				$type = $parts[1];
+				break;
+			}
+		}
+		if($slave){
+			if($type == 'master.packages.list'){
+				$this->master_packages_list($slave);
+			}else if($type == 'master.packages.info'){
+				$this->master_packages_info($slave);
+			}else{
+				echo 500;
+			}
+		}
+	}
+	function master_packages_list($slave) {
+		echo $slave['oscen.instance']->response('master.packages.list',
+			array('master.packages.list' => $this->packages));
+	}
+	function master_packages_info($slave){
+		$post = parse_post();
+		if($params = $slave['oscen.instance']->verify('master.packages.info', $post)){
+			foreach($this->packages as $package) {
+				if($package['file'] == $params['request.package']){
+					echo $slave['oscen.instance']->response('master.packages.info', array(
+						'request.package.checksum' => $package['checksum'],
+						'request.package.file.path' => $this->config['base'] . $this->config['packages'] . '/' . $package['file']
+					));
+					return;
+				}
+			}
+			echo 404;
+		}else{
+			echo 403;
 		}
 	}
 	
@@ -100,6 +152,9 @@ class Master extends Opun {
 			}
 			$this->commit_slaves_data();
 		}
+	}
+	function commit_packages() {
+		$this->data->key('master.packages', $this->packages);
 	}
 	function commit_slaves_data() {
 		$data = array();

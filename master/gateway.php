@@ -3,4 +3,4 @@
 error_reporting(E_ALL & ~E_NOTICE);
 
 include('config.php');
-$master->route();
+$master->gateway();

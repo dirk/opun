@@ -2,11 +2,12 @@
 include('lib/opun.php');
 
 class Slave extends Opun {
-	var $data, $masters;
+	var $data, $masters, $config;
 	
-	function Slave($datastore) {
-		$this->data = $datastore;
+	function Slave($datastore, $config) {
+		$this->data = $datastore;$this->config = $config;
 		
+		// Initialize Oscen instances for each master.
 		$masters = $this->data->key('slave.masters');
 		foreach($masters as $master){
 			$master['oscen.instance'] = new Oscen(array(
@@ -15,8 +16,6 @@ class Slave extends Opun {
 			));
 			$this->masters[] = $master;
 		}
-		
-		$this->commit_masters_data();
 	}
 	
 	function gateway() {
@@ -31,21 +30,32 @@ class Slave extends Opun {
 				break;
 			}
 		}
-		if($master){
+		if($master = &$this->get_master($master)){
 			if($type == 'slave.status'){
 				$this->slave_status($master);
 			}else if($type == 'slave.packages.check_servability'){
 				$this->slave_packages_check_servability($master);
 			}else if($type == 'slave.packages.list.update'){
 				$this->slave_packages_list_update($master);
+			}else{
+				echo 500;
 			}
+			/*}else{
+				$master = &$this->get_master($master);
+				print_r();
+			}*/
 		}
 	}
-	function get_master($master){
-		$masters = $this->masters;
-		for($i = 0; $i < count($masters); $i++){
-			if($masters[$i]['master.identifier'] = $master){
-				return $masters[$i];
+	/*
+	Complete Implentations:
+	$master['oscen.instance']->request('master.packages.info', array(
+		'request.package' => 'test.zip'
+	), $this->config['identifier'])
+	*/
+	function &get_master($master){
+		for($i = 0; $i < count($this->masters); $i++){
+			if($this->masters[$i]['master.identifier'] = $master){
+				return $this->masters[$i];
 			}
 		}
 	}
@@ -59,9 +69,16 @@ class Slave extends Opun {
 		}
 		return null;
 	}
+	function slave_packages_list_update($master){
+		$post = parse_post();
+		if($params = $master['oscen.instance']->verify('slave.packages.list.update', $post)){
+			$master['master.packages'] = $params['master.packages.list'];
+			$this->commit_masters_data();
+		}else{
+			echo 404;
+		}
+	}
 	function slave_packages_check_servability($master){
-		$master = $this->get_master($master);
-		
 		$post = parse_post($_POST);
 		if($params = $master['oscen.instance']->verify('slave.packages.check_servability', $post)){
 			if($package = $this->get_package($params['request.package'], $master)){
@@ -79,8 +96,6 @@ class Slave extends Opun {
 		}
 	}
 	function slave_status($master) {
-		$master = $this->get_master($master);
-		
 		$packages = array();
 		$packages_serving = array();
 		foreach($master['slave.packages'] as $package){
