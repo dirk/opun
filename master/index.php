@@ -13,6 +13,12 @@ $config['identifier'] = 'localhost.opun.master';
 // The URL for this Opun instance's gateway. Should be something like:
 // "http://master.example.com/gateway.php"
 $config['gateway'] = 'http://localhost/opun/master/gateway.php';
+// The directory to store uploaded packages.
+$config['packages'] = 'packages';
+
+$config['slaves'] = array();
+	// Time (seconds) between sending slave.status requests to slaves.
+	$config['slaves']['status_timeout'] = 300; // 5 minutes
 // 
 // -----------CONFIG END-------------
 
