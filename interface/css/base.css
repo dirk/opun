@@ -3,6 +3,9 @@
 	padding: 0;
 }
 a {color: #44f;}
+sup {vertical-align: top;}
+sup.help {text-decoration: none;color: #000;margin-left: -1px;padding: 2px 1px 0 1px;cursor: pointer;}
+/*sup.help:hover {background: #000;color: #fff;}*/
 body {
 	border-top: 5px solid #000;
 	background: #e8f0f3;
@@ -36,41 +39,58 @@ body {
   color: #444;
 }
 
+#content hr {
+  width: 640px;margin-left: -20px;
+  border: none;border-bottom: 1px solid #eee;
+  margin-bottom: 20px;
+}
+
 .right {float: right;}
 .clear {clear: both;}
 
-.slaves .slave {
+.slaves .slave, .packages .package {
   list-style: none;
   padding-bottom: 20px;margin-bottom: 20px;
   border-bottom: 1px solid #ddd;
 }
 .slaves .slave h2.identifier {font-size: 18px;}
-.slaves .slave .detail {font-size: 12px;color: #888;}
-.slaves .slave .capacity .indicator {
+.slaves .slave .detail,
+.packages .package .detail {font-size: 12px;color: #888;}
+.packages .package h2.file {font-size: 18px;}
+
+.capacity .indicator {
   -moz-border-radius: 6px;
   width: 150px;height: 8px;
   padding: 1px;
   border: 1px solid #ccc;
   position: relative;
 }
-.slaves .slave .capacity .indicator div {
+.capacity .indicator div {
   display: block;position: absolute;
   height: 8px;
-  opacity: .5;
   -moz-border-radius: 4px;
+  background: #444;
 }
-.slaves .slave .capacity .detail {
+.capacity .detail {
   margin-top: 4px;
-  font-size: 10px;text-transform: uppercase;
+  font-size: 10px !important;text-transform: uppercase;
   text-align: right;
+  color: #888;
 }
-.slaves .slave .capacity .indicator div.bandwidth {background: #88f;}
-.slaves .slave .capacity .detail span.bandwidth {color: #88f;}
-.slaves .slave .capacity .indicator div.files {background: #f88;}
-.slaves .slave .capacity .detail span.files {color: #f88;}
+.capacity .indicator div.bandwidth {background: #44f;}
+.capacity .detail span.bandwidth {color: #88f;}
+.capacity .indicator div.files {background: #f44;}
+.capacity .detail span.files {color: #f88;}
 
 
 #footer {
   width: 640px;margin: 0 auto;
   font-size: 11px;color: #468;
+}
+.tooltip {
+  background: #000;color: #fff;
+  padding: 7px 7px 5px 7px;
+  -moz-border-radius: 12px;
+  position: absolute;display: block;
+  margin-left: 4px;
 }
