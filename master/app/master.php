@@ -38,6 +38,7 @@ class Master extends Opun {
 					'slave.secret' => 'aabbccdd'
 				)
 			);
+			$this->data->key('master.slaves', $this->slaves);
 		}
 	}
 	
