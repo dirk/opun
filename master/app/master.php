@@ -2,11 +2,7 @@
 include('lib/opun.php');
 
 class Master extends Opun {
-	
-	var $data;
-	
-	var $slaves;
-	
+	var $data, $slaves;
 	
 	function Master($datastore, $config){
 		$this->data = $datastore;$this->config = $config;
@@ -35,15 +31,48 @@ class Master extends Opun {
 			$this->slaves = array(
 				array(
 					'slave.gateway' => 'http://localhost/opun/slave/gateway.php',
-					'slave.secret' => 'aabbccdd'
+					'slave.secret' => 'aabbccdd',
+					'slave.packages' => array(
+						array(
+							'file'     => 'test.zip',
+							'checksum' => '',
+							'serving'  => false
+						)
+					)
 				)
 			);
 			$this->data->key('master.slaves', $this->slaves);
 		}
 	}
 	
-	function route(){
+	function route() {
 		$qs = $_SERVER['QUERY_STRING'];
+		if($qs == '') {
+			$this->dashboard();
+		}else if($qs == 'status'){
+			foreach($this->slaves as $slave){
+				
+			}
+		}
+	}
+	
+	
+	// Complete Implementations:
+	/*
+	slave.packages.check_servability:
+	$slave['oscen.instance']->request('slave.packages.check_servability', array('request.package' => 'test.zip'), $this->config['identifier']);
+	
+	
+	*/
+	
+	
+	
+	
+	function dashboard() {
+		$packages = $this->data->key('master.packages');
+		foreach($packages as $package) {
+			echo $package['file'] . ' &mdash; ' . $package['release'];
+		}
 	}
 	
 	// Sends out slave.status requests to the slaves that have not been checked
@@ -62,7 +91,7 @@ class Master extends Opun {
 			$i = 0;
 			foreach($this->slaves as $slave){
 				if($slave['slave.last_status'] < (time() - $timeout)){
-					$status = $slave['oscen.instance']->request('slave.status');
+					$status = $slave['oscen.instance']->request('slave.status', array(), $this->config['identifier']);
 					unset($status['signature']);
 					$this->slaves[$i] = array_merge_replace_recursive($slave, $status);
 					$this->slaves[$i]['slave.last_status'] = time();

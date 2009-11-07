@@ -3,14 +3,7 @@ class Data {
 	/*
 	Manages persistent data storage for the application.
 	*/
-	
-	var $data = array(
-		'master.identifier' => '',
-		'master.gateway' => '',
-		'master.protocol.version' => 0.1,
-		'master.slaves' => array()
-	);
-	var $file;
+	var $file, $data;
 	
 	function Data($file = 'app/data/serialized.store'){
 		$this->file = $file;

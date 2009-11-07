@@ -1,4 +1,24 @@
 <?php
+// You'll want to change this to something more secure in production.
+error_reporting(E_ALL & ~E_NOTICE);
+
+$is_gateway = true;
+include('app/slave.php');
+include('app/lib/data.php');
+$datastore = new Data();
+
+$slave = new Slave($datastore);
+$slave->gateway();
+
+
+
+
+
+die();
+
+
+
+
 function sign($type, $data) {
 	return md5($type . '&' . http_build_query($data) . '&' . 'aabbccdd');
 }

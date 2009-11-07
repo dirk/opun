@@ -31,6 +31,7 @@ include('app/lib/data.php');
 // a custom database layer (EG: A wrapper for MySQL or similar system).
 // The default database layer is located in app/lib/data.php.
 $datastore = new Data();
+
 // Initialize the new Opun Master instance with a datastore and
 // configuration variables.
 $master = new Master($datastore, $config);
