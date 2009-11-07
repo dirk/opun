@@ -1,6 +1,75 @@
 <?php
 include('lib/opun.php');
 
+class Slave {
+	var $masters;
+	var $secret = 'aabbccdd';
+	
+	var $datastore, $config;
+	function Slave($datastore, $config) {
+		$this->datastore = $datastore; $this->config = $config;
+		
+		$this->masters = array(
+			'localhost.opun.master' => array(
+				'bandwidth' => array(
+					'used' => 0,
+					'maximum' => 1000000000,
+					'total' => 25000000000
+				),
+				'packages' => array(
+					'slave' => array(
+						array(
+							'file' => 'test.zip',
+							'checksum' => '',
+							'bandwidth' => 0,
+							'clients' => 0
+						)
+					),
+					'master' => array(
+						array(
+							'file' => 'test.zip',
+							'checksum' => ''
+						)
+					)
+				),
+			)
+		);
+	}
+	function gateway(){
+		if($matches = $this->match('/^status(?:.(?<format>[a-z]+))?/i')){
+			$this->status(strtolower($matches['format']));
+		}
+		$this->save();
+	}
+	function status($format){
+		if($format == 'json')
+			echo json_encode(array('test' => $format));
+	}
+	
+	function save() {
+		$data = array(
+			'masters' => $this->masters,
+			'secret' => $this->secret
+		);
+		$this->datastore->data = $data;
+		$this->datastore->commit();
+	}
+	function match($expr, $qs = '') {
+		if($qs == ''){
+			$qs = $_SERVER['QUERY_STRING'];
+		}
+		if(starts_with($qs, '/')){
+			$qs = substr($qs, 1);
+		}
+		if(preg_match($expr, $qs, $matches)){
+			return $matches;
+		}else{
+			return false;
+		}
+	}
+}
+
+/*
 class Slave extends Opun {
 	var $data, $masters, $config;
 	
@@ -40,18 +109,9 @@ class Slave extends Opun {
 			}else{
 				echo 500;
 			}
-			/*}else{
-				$master = &$this->get_master($master);
-				print_r();
-			}*/
 		}
 	}
-	/*
-	Complete Implentations:
-	$master['oscen.instance']->request('master.packages.info', array(
-		'request.package' => 'test.zip'
-	), $this->config['identifier'])
-	*/
+	
 	function &get_master($master){
 		for($i = 0; $i < count($this->masters); $i++){
 			if($this->masters[$i]['master.identifier'] = $master){
@@ -136,4 +196,4 @@ class Slave extends Opun {
 		}
 		$this->data->key('slave.masters', $data);
 	}
-}
+}*/
