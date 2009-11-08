@@ -10,6 +10,7 @@ $config['identifier'] = 'localhost.opun.master';
 // The URL for this Opun instance's gateway. Should be something like:
 // "http://master.example.com/gateway.php"
 $config['gateway'] = 'http://localhost/opun/master/gateway.php';
+// The base location of the master directory, with trailing slash.
 $config['base']    = 'http://localhost/opun/master/';
 // The directory to store uploaded packages.
 $config['packages'] = 'packages';

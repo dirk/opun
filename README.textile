@@ -1,0 +1,11 @@
+h2. Opun
+
+Opun is an open-source PHP implementation of the Oscen master-slave content delivery network protocol.
+
+h3. Getting Started
+
+# You'll want to grab this repository, which contains both files for a master server and a slave server.
+# Either keep them both, or just grab the one you want by copying the folder (master or slave) to its destination.
+# Set up your @config.php@ file. Make sure to create a strong password, a good secret (If you're running a slave), and the gateway and base URL.
+# Make sure you have @php_value output_buffering "0"@ in your @.htaccess@ file.
+# Find a master or a slave to establish your dominion over/become a humble peon for!
