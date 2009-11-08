@@ -1,4 +1,4 @@
-
+*.store
 .DS_Store
 master/packages/*
 slave/packages/*
