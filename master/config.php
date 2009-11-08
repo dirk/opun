@@ -16,7 +16,7 @@ $config['packages'] = 'packages';
 
 $config['slaves'] = array();
 	// Time (seconds) between sending slave.status requests to slaves.
-	$config['slaves']['status_timeout'] = 300; // 5 minutes
+	$config['slaves']['status_timeout'] = 120; // 2 minutes
 // 
 // -----------CONFIG END-------------
 

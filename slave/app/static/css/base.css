@@ -32,6 +32,12 @@ body {
 #container #content {
   padding: 20px;
 }
+#content h1.section {
+  font-size: 18px;margin-bottom: 20px;padding-bottom: 15px;padding-left: 20px;
+  width: 620px;margin-left: -20px;
+  border-bottom: 1px solid #eee;
+  color: #444;
+}
 #content h2.section {
   font-size: 14px;
   text-transform: uppercase;
@@ -80,13 +86,14 @@ a.button {
 .right {float: right;}
 .clear {clear: both;}
 
-.slaves .slave, .packages .package {
+.masters .master, .packages .package {
   list-style: none;
   padding-bottom: 20px;margin-bottom: 20px;
   border-bottom: 1px solid #ddd;
 }
-.slaves .slave h2.identifier {font-size: 18px;}
-.slaves .slave .detail,
+.masters .master h2.identifier {font-size: 18px;}
+.masters .master h2.identifier span.note {font-size: 12px;color: #888;font-weight: normal;}
+.masters .master .detail,
 .packages .package .detail {font-size: 12px;color: #888;}
 .packages .package h2.file {font-size: 18px;}
 .packages .package h2.file span.note {font-size: 12px;color: #888;font-weight: normal;}

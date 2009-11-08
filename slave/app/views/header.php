@@ -29,7 +29,7 @@
 			<a href="<?php $this->link('logout'); ?>">Logout</a>
 		</div>
 		<?php endif; ?>
-		<h2>Opun &mdash; Master</h2>
+		<h2>Opun &mdash; Slave</h2>
 		<?php if($header): ?>
 			<h1><?php echo $header; ?></h1>
 		<?php else: ?>

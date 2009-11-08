@@ -16,6 +16,11 @@ $config['gateway'] = 'http://localhost/opun/slave/gateway.php';
 $config['base']    = 'http://localhost/opun/slave/';
 // The directory to store uploaded packages.
 $config['packages'] = 'packages';
+
+$config['masters'] = array();
+	// Amount of time, in seconds, before the slave should refetch a package list
+	// from its master.
+	$config['masters']['update_timeout'] = 300; // 5 minutes
 // 
 // -----------CONFIG END-------------
 
