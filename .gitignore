@@ -1,4 +1,5 @@
-*.store
+master/app/data/*
+slave/app/data/*
 .DS_Store
 master/packages/*
 slave/packages/*
